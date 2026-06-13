@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM</title>
+<style>
+:root {
+  --bg:#F7F6F3;--surface:#fff;--surface2:#F1EFF9;
+  --border:#E4E2EF;--border2:#CAC7E2;
+  --text:#1A1830;--text2:#6B6888;--text3:#9B98B2;
+  --purple:#4A3FD4;--pl:#EAE8FC;--pm:#7C73E6;
+  --green:#1D9E75;--gl:#E1F5EE;
+  --red:#E24B4A;--rl:#FCEBEB;
+  --amber:#BA7517;--al:#FEF3CD;
+  --r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:272px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sb-head{padding:14px 12px 10px;border-bottom:1px solid var(--border)}
+.sb-logo{font-size:14px;font-weight:700;color:var(--purple);margin-bottom:10px}
+.btn-new{width:100%;background:var(--purple);color:#fff;border:none;border-radius:var(--rs);padding:8px 12px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-new:hover{background:#3730b8}
+.sb-filters{display:flex;flex-direction:column;gap:1px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.sf{padding:6px 10px;border-radius:var(--rs);font-size:12px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+.sf:hover{background:var(--surface2)}.sf.on{background:var(--surface2);color:var(--text);font-weight:500}
+.sf-count{font-size:11px;background:var(--border);color:var(--text2);border-radius:20px;padding:1px 7px;min-width:20px;text-align:center}
+.sf-count.red{background:var(--rl);color:var(--red)}.sf-count.amber{background:var(--al);color:var(--amber)}.sf-count.green{background:var(--gl);color:var(--green)}
+
+/* STAGE FILTERS */
+.stages-section{padding:6px 8px 4px;border-bottom:1px solid var(--border)}
+.stages-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:2px 4px 5px}
+.stage-filter{padding:5px 10px;border-radius:var(--rs);font-size:12px;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:7px}
+.stage-filter:hover{background:var(--surface2)}.stage-filter.on{background:var(--surface2);color:var(--text);font-weight:500}
+.stage-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* CLIENT LIST with month groups */
+.sb-list{flex:1;overflow-y:auto;padding:6px 8px}
+.sb-list::-webkit-scrollbar{width:3px}
+.sb-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.month-group{}
+.month-header{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:10px 6px 5px;display:flex;align-items:center;gap:6px}
+.month-header::after{content:'';flex:1;height:1px;background:var(--border)}
+.c-item{padding:9px 10px;border-radius:var(--rs);cursor:pointer;margin-bottom:2px;border:1px solid transparent;position:relative}
+.c-item:hover{background:var(--surface2)}.c-item.active{background:var(--surface2);border-color:var(--border2)}
+.c-name{font-size:12px;font-weight:600;margin-bottom:1px;padding-right:14px}
+.c-company{font-size:11px;color:var(--text2)}
+.c-date-small{font-size:10px;color:var(--text3);margin-top:2px}
+.c-dot{position:absolute;top:10px;right:9px;width:7px;height:7px;border-radius:50%}
+.c-stage-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;margin-top:4px}
+.cst-dot{width:6px;height:6px;border-radius:50%}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.m-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-direction:column;gap:8px}
+.m-top{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;gap:8px}
+.m-name{font-size:16px;font-weight:600}
+.m-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.m-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.stage-sel-wrap{position:relative}
+.stage-sel-btn{display:flex;align-items:center;gap:6px;border:1px solid var(--border2);border-radius:var(--rs);padding:5px 10px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text);white-space:nowrap}
+.stage-sel-btn:hover{background:var(--surface2)}
+.stage-dropdown{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:50;min-width:200px;padding:4px;display:none}
+.stage-dropdown.open{display:block}
+.sd-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;font-size:12px}
+.sd-item:hover{background:var(--surface2)}.sd-item.active{background:var(--pl);font-weight:500}
+.btn-attn{border:none;border-radius:var(--rs);padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-attn-on{background:var(--rl);color:var(--red);border:1px solid #F7C1C1}
+.btn-attn-off{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.btn-attn-off:hover{background:var(--rl);color:var(--red)}
+.btn-reply-on{background:var(--al);color:var(--amber);border:1px solid #F4D090}
+.btn-reply-off{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.btn-reply-off:hover{background:var(--al);color:var(--amber)}
+.btn-del{background:none;border:1px solid var(--border);border-radius:var(--rs);padding:5px 9px;font-size:11px;cursor:pointer;color:var(--text3)}
+.btn-del:hover{background:var(--rl);color:var(--red);border-color:#F7C1C1}
+.tabs{display:flex;border-bottom:1px solid var(--border);padding:0 18px;flex-shrink:0;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:9px 13px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text2);margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--text)}.tab.on{color:var(--purple);border-bottom-color:var(--purple);font-weight:500}
+.tab-badge{background:var(--pl);color:var(--purple);border-radius:10px;padding:0 5px;font-size:10px;margin-left:3px}
+.content{flex:1;overflow-y:auto;padding:16px 18px;background:var(--bg)}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* SECTIONS */
+.sec{margin-bottom:18px}
+.sec-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.info-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:9px 11px;cursor:pointer;transition:border-color .12s}
+.info-box:hover{border-color:var(--purple);background:var(--pl)}
+.info-box.plain{cursor:default}.info-box.plain:hover{border-color:var(--border);background:var(--surface)}
+.ib-label{font-size:10px;color:var(--text3);margin-bottom:3px}
+.ib-val{font-size:14px;font-weight:600}
+.ib-hint{font-size:10px;color:var(--pm);margin-top:2px}
+.offer-box{background:var(--pl);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;font-size:13px;line-height:1.6}
+
+/* FEED — заметки-лента */
+.feed{display:flex;flex-direction:column;gap:6px}
+.feed-input-wrap{display:flex;gap:6px;align-items:flex-end;margin-bottom:10px}
+.feed-input{flex:1;border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);resize:none;min-height:38px;max-height:100px}
+.feed-input:focus{outline:none;border-color:var(--pm)}
+.btn-feed-send{background:var(--purple);color:#fff;border:none;border-radius:var(--rs);padding:8px 14px;font-size:12px;cursor:pointer;font-weight:500;white-space:nowrap;flex-shrink:0}
+.btn-feed-send:hover{background:#3730b8}
+.feed-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;position:relative}
+.feed-item.system{border-left:3px solid var(--pm);background:var(--surface)}
+.feed-item.user-note{border-left:3px solid var(--green)}
+.feed-meta{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.feed-author{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.feed-author.me{color:var(--green)}.feed-author.system{color:var(--pm)}.feed-author.coder{color:var(--purple)}
+.feed-time{font-size:10px;color:var(--text3)}
+.feed-text{font-size:12px;line-height:1.55}
+.feed-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 5px;border-radius:4px;font-size:12px;opacity:0}
+.feed-item:hover .feed-del{opacity:1}
+.feed-del:hover{background:var(--rl);color:var(--red)}
+
+/* QA */
+.qa-item{border:1px solid var(--border);border-radius:var(--rs);margin-bottom:6px;overflow:hidden;background:var(--surface)}
+.qa-q{font-size:11px;font-weight:600;color:var(--text2);padding:8px 10px 0;display:flex;align-items:center;justify-content:space-between}
+.qa-a-input{border:none;border-top:1px solid var(--border);background:var(--bg);padding:7px 10px;font-size:12px;font-family:inherit;width:100%;resize:vertical;min-height:36px;color:var(--text)}
+.qa-a-input:focus{outline:none;background:var(--pl)}
+.add-row{display:flex;gap:6px;align-items:stretch;margin-top:6px}
+.add-input{flex:1;border:1px solid var(--border);border-radius:var(--rs);padding:7px 9px;font-size:12px;background:var(--surface);color:var(--text);font-family:inherit}
+.add-input:focus{outline:none;border-color:var(--pm)}
+.btn-add{border:1px solid var(--border2);border-radius:var(--rs);padding:7px 12px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2);white-space:nowrap}
+.btn-add:hover{background:var(--surface2)}
+.btn-purple{background:var(--purple);color:#fff;border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;cursor:pointer;font-weight:500}
+.btn-purple:hover{background:#3730b8}
+.btn-sm-red{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 5px;border-radius:4px;font-size:12px}
+.btn-sm-red:hover{background:var(--rl);color:var(--red)}
+
+/* FILES */
+.file-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);margin-bottom:5px;background:var(--surface)}
+.file-icon{background:var(--pl);border-radius:4px;font-size:9px;font-weight:700;color:var(--purple);padding:4px 5px;flex-shrink:0}
+.file-name{flex:1;font-size:12px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-meta{font-size:10px;color:var(--text3)}
+.file-link{font-size:11px;color:var(--purple);text-decoration:none;white-space:nowrap}
+.file-link:hover{text-decoration:underline}
+
+/* CHAT */
+.msgs{display:flex;flex-direction:column;gap:10px}
+.msg-wrap{display:flex;flex-direction:column}
+.msg-wrap.me{align-items:flex-end}.msg-wrap.them{align-items:flex-start}
+.msg-bubble{max-width:78%;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55;word-break:break-word}
+.msg-wrap.me .msg-bubble{background:var(--purple);color:#fff;border-bottom-right-radius:3px}
+.msg-wrap.them .msg-bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:3px}
+.msg-time{font-size:10px;color:var(--text3);margin-top:3px;padding:0 3px}
+.chat-input-area{display:flex;gap:8px;padding:10px 18px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-input{flex:1;border:1px solid var(--border2);border-radius:20px;padding:8px 14px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);resize:none}
+.chat-input:focus{outline:none;border-color:var(--pm)}
+.btn-send{background:var(--purple);color:#fff;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end}
+.btn-send:hover{background:#3730b8}
+
+/* CODER */
+.coder-note{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--pm);border-radius:var(--rs);padding:10px 12px;margin-bottom:8px}
+.coder-who{font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.my-task{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--rs);padding:10px 12px;margin-bottom:8px}
+.my-task-who{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.coder-text{font-size:12px;line-height:1.6}
+.coder-date{font-size:10px;color:var(--text3);margin-top:5px}
+
+/* TIMELINE */
+.tl-row{display:flex;gap:12px;padding-bottom:14px;position:relative}
+.tl-row:not(:last-child)::before{content:'';position:absolute;left:5px;top:13px;bottom:0;width:1px;background:var(--border2)}
+.tl-dot{width:11px;height:11px;border-radius:50%;background:var(--pm);flex-shrink:0;margin-top:2px;border:2px solid var(--bg)}
+.tl-event{font-size:12px;font-weight:500}
+.tl-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
+.tl-date{font-size:10px;color:var(--text3);margin-top:3px}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(26,24,48,.45);display:none;align-items:center;justify-content:center;z-index:100}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r);padding:20px;width:360px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(74,63,212,.18)}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:14px}
+.mrow{margin-bottom:10px}
+.mrow label{font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.mrow input,.mrow select,.mrow textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px;font-size:13px;background:var(--bg);color:var(--text);font-family:inherit}
+.mrow input:focus,.mrow select:focus,.mrow textarea:focus{outline:none;border-color:var(--pm);background:var(--surface)}
+.mrow textarea{resize:vertical;min-height:64px}
+.mbtns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.btn-cancel{border:1px solid var(--border);border-radius:var(--rs);padding:7px 14px;font-size:12px;cursor:pointer;background:var(--surface);color:var(--text2)}
+.confirm-modal{background:var(--surface);border-radius:var(--r);padding:20px;width:300px;box-shadow:0 8px 32px rgba(74,63,212,.18);text-align:center}
+.confirm-modal h3{font-size:14px;font-weight:600;margin-bottom:8px}
+.confirm-modal p{font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5}
+.btn-red{background:var(--red);color:#fff;border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;cursor:pointer;font-weight:500}
+.btn-red:hover{background:#C23B3A}
+
+/* SYNC */
+.sync-bar{display:flex;align-items:center;gap:7px;padding:5px 14px;background:var(--surface);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);flex-shrink:0}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:var(--green)}.sync-dot.err{background:var(--red)}.sync-dot.loading{background:var(--amber);animation:pulse .7s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-setup{font-size:11px;color:var(--purple);cursor:pointer;background:none;border:none;text-decoration:underline}
+.btn-reload{font-size:11px;color:var(--text2);cursor:pointer;background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;margin-left:4px}
+.btn-reload:hover{background:var(--surface2)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">CRM</div>
+      <button class="btn-new" onclick="openModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Новый клиент
+      </button>
+    </div>
+    <div class="sb-filters">
+      <div class="sf on" data-f="all" onclick="setFilter(this)"><span>Все клиенты</span><span class="sf-count" id="cnt-all">0</span></div>
+      <div class="sf" data-f="new" onclick="setFilter(this)"><span>🟢 Новые</span><span class="sf-count green" id="cnt-new">0</span></div>
+      <div class="sf" data-f="attn" onclick="setFilter(this)"><span>🔴 Требует внимания</span><span class="sf-count red" id="cnt-attn">0</span></div>
+      <div class="sf" data-f="reply" onclick="setFilter(this)"><span>🟡 Требует ответа</span><span class="sf-count amber" id="cnt-reply">0</span></div>
+    </div>
+    <div class="stages-section">
+      <div class="stages-title">По этапу</div>
+      <div class="stage-filter on" data-sf="all" onclick="setStageFilter(this)"><div class="stage-dot" style="background:var(--border2)"></div><span>Все этапы</span></div>
+      <div class="stage-filter" data-sf="negotiations" onclick="setStageFilter(this)"><div class="stage-dot" style="background:#9B59D0"></div><span>Переговоры</span></div>
+      <div class="stage-filter" data-sf="kp" onclick="setStageFilter(this)"><div class="stage-dot" style="background:#2E9CCA"></div><span>Выслал КП</span></div>
+      <div class="stage-filter" data-sf="reply" onclick="setStageFilter(this)"><div class="stage-dot" style="background:#F4A822"></div><span>Требует ответа</span></div>
+      <div class="stage-filter" data-sf="work" onclick="setStageFilter(this)"><div class="stage-dot" style="background:#1D9E75"></div><span>В работе</span></div>
+      <div class="stage-filter" data-sf="frozen" onclick="setStageFilter(this)"><div class="stage-dot" style="background:#E24B4A"></div><span>Заморожен</span></div>
+    </div>
+    <div class="sb-list" id="sbList"></div>
+  </div>
+
+  <div class="main" id="mainArea">
+    <div class="sync-bar" id="globalSyncBar">
+      <div class="sync-dot loading" id="globalSyncDot"></div>
+      <span id="globalSyncText">Загрузка...</span>
+      <button class="btn-reload" onclick="loadFromSheets()">↻</button>
+      <button class="btn-setup" onclick="openSetup()" style="margin-left:auto">⚙ Google Sheets</button>
+    </div>
+    <div class="m-empty">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <span style="font-size:13px">Выберите клиента</span>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>Новый клиент</h3>
+    <div class="mrow"><label>Имя контакта</label><input id="fName" placeholder="Иван Иванов"></div>
+    <div class="mrow"><label>Компания</label><input id="fCompany" placeholder="ООО Пример"></div>
+    <div class="mrow"><label>Телефон / Email</label><input id="fContact" placeholder="+7 999 000-00-00"></div>
+    <div class="mrow"><label>Этап</label>
+      <select id="fStage">
+        <option value="negotiations">Переговоры</option>
+        <option value="kp">Выслал КП</option>
+        <option value="reply">Требует ответа</option>
+        <option value="work">В работе</option>
+        <option value="frozen">Заморожен</option>
+      </select>
+    </div>
+    <div class="mrow"><label>Что предложил</label><textarea id="fOffer" placeholder="Кратко опиши своё предложение..."></textarea></div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-purple" onclick="saveClient()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="confirm-modal">
+    <h3>Удалить клиента?</h3>
+    <p id="confirmText"></p>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn-cancel" onclick="closeConfirm()">Отмена</button>
+      <button class="btn-red" onclick="confirmDelete()">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="setupOverlay">
+  <div class="modal">
+    <h3>⚙ Google Sheets</h3>
+    <p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:14px">Вставь URL из Google Apps Script (apps_script_v3.js). Доступ: <b>Все</b>.</p>
+    <div class="mrow"><label>URL скрипта</label><input id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec"></div>
+    <div class="mbtns">
+      <button class="btn-cancel" onclick="closeSetup()">Отмена</button>
+      <button class="btn-purple" onclick="saveSetup()">Сохранить и загрузить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES={negotiations:'Переговоры',kp:'Выслал КП',reply:'Требует ответа',work:'В работе',frozen:'Заморожен'};
+const SC={negotiations:{dot:'#9B59D0',text:'#6B3FA0'},kp:{dot:'#2E9CCA',text:'#0C6E99'},reply:{dot:'#F4A822',text:'#BA7517'},work:{dot:'#1D9E75',text:'#0F6E56'},frozen:{dot:'#E24B4A',text:'#791F1F'}};
+const QA_DEFAULT=['Какую задачу хотят решить?','Текущее решение — что не устраивает?','Бюджет и сроки','Кто принимает решение?','Дополнительные пожелания / боли?'];
+const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+let clients=[];
+let activeId=null,activeTab='info',filterMode='all',stageFilter='all';
+let scriptUrl=localStorage.getItem('crm_script_url')||'';
+let nextId=parseInt(localStorage.getItem('crm_nextid4')||'1');
+let deleteTarget=null;
+
+// ─── SYNC ──────────────────────────────────────────────────
+function setSyncState(state,text){
+  const dot=document.getElementById('globalSyncDot');
+  const txt=document.getElementById('globalSyncText');
+  if(!dot||!txt)return;
+  dot.className='sync-dot '+state;
+  txt.textContent=text;
+}
+async function loadFromSheets(){
+  if(!scriptUrl){
+    const local=localStorage.getItem('crm_clients4');
+    if(local)clients=JSON.parse(local);
+    else clients=getDemoClients();
+    setSyncState('','Локальные данные');
+    renderList();return;
+  }
+  setSyncState('loading','Загрузка...');
+  try{
+    const url=scriptUrl+(scriptUrl.includes('?')?'&':'?')+'action=getAll&t='+Date.now();
+    const res=await fetch(url);
+    const data=await res.json();
+    if(data.ok&&Array.isArray(data.clients)){
+      clients=data.clients;
+      if(clients.length){const mx=Math.max(...clients.map(c=>c.id||0));if(mx>=nextId){nextId=mx+1;localStorage.setItem('crm_nextid4',String(nextId));}}
+      saveLocal();
+      setSyncState('ok','Синхронизировано · '+clients.length+' клиентов');
+    }else throw new Error(data.error||'Ошибка');
+  }catch(e){
+    setSyncState('err','Ошибка: '+e.message);
+    const local=localStorage.getItem('crm_clients4');
+    if(local)clients=JSON.parse(local);
+    else clients=getDemoClients();
+  }
+  renderList();
+}
+async function pushToSheets(action,payload){
+  if(!scriptUrl)return;
+  try{
+    await fetch(scriptUrl,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action,...payload})});
+  }catch(e){setSyncState('err','Ошибка сохранения');}
+}
+function saveLocal(){localStorage.setItem('crm_clients4',JSON.stringify(clients));localStorage.setItem('crm_nextid4',String(nextId));}
+function saveAndSync(client){saveLocal();pushToSheets('save',{client});}
+function deleteAndSync(id){saveLocal();pushToSheets('delete',{id});}
+
+// ─── UTILS ─────────────────────────────────────────────────
+function today(){const d=new Date();return`${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;}
+function nowTs(){
+  const d=new Date();
+  return{
+    display:`${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`,
+    iso:d.toISOString(),
+    month:d.getMonth(),
+    year:d.getFullYear()
+  };
+}
+function parseCreatedDate(c){
+  // Try to get month/year from timeline first entry
+  if(c.timeline&&c.timeline.length){
+    const first=c.timeline[0].date;
+    if(first&&first.includes('.')){
+      const parts=first.split('.');
+      if(parts.length>=3)return{month:parseInt(parts[1])-1,year:parseInt(parts[2])};
+    }
+  }
+  return{month:new Date().getMonth(),year:new Date().getFullYear()};
+}
+function addHistory(c,event,desc){c.timeline.push({date:today(),event,desc:desc||''});}
+
+// ─── COUNTERS ──────────────────────────────────────────────
+function updateCounters(){
+  document.getElementById('cnt-all').textContent=clients.length;
+  document.getElementById('cnt-new').textContent=clients.filter(c=>c.isNew).length;
+  document.getElementById('cnt-attn').textContent=clients.filter(c=>c.attention).length;
+  document.getElementById('cnt-reply').textContent=clients.filter(c=>c.needReply).length;
+}
+
+// ─── SIDEBAR LIST with month groups ────────────────────────
+function renderList(){
+  updateCounters();
+  const el=document.getElementById('sbList');
+  let list=[...clients];
+  if(filterMode==='new')list=list.filter(c=>c.isNew);
+  else if(filterMode==='attn')list=list.filter(c=>c.attention);
+  else if(filterMode==='reply')list=list.filter(c=>c.needReply);
+  if(stageFilter!=='all')list=list.filter(c=>c.stage===stageFilter);
+  if(!list.length){el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Нет клиентов</div>`;return;}
+
+  // Group by month/year
+  const groups={};
+  list.forEach(c=>{
+    const {month,year}=parseCreatedDate(c);
+    const key=`${year}-${String(month).padStart(2,'0')}`;
+    if(!groups[key])groups[key]={month,year,clients:[]};
+    groups[key].clients.push(c);
+  });
+
+  const sortedKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  el.innerHTML=sortedKeys.map(key=>{
+    const g=groups[key];
+    const label=`${MONTHS[g.month]} ${g.year}`;
+    const items=g.clients.map(c=>{
+      const sc=SC[c.stage]||SC.negotiations;
+      const dot=c.isNew?`<div class="c-dot" style="background:var(--green)"></div>`
+        :c.attention?`<div class="c-dot" style="background:var(--red)"></div>`
+        :c.needReply?`<div class="c-dot" style="background:var(--amber)"></div>`:'';
+      const created=c.timeline&&c.timeline[0]?c.timeline[0].date:'';
+      return`<div class="c-item${c.id===activeId?' active':''}" onclick="selectClient(${c.id})">
+        ${dot}
+        <div class="c-name">${c.name}</div>
+        <div class="c-company">${c.company}</div>
+        ${created?`<div class="c-date-small">с ${created}</div>`:''}
+        <div class="c-stage-tag"><div class="cst-dot" style="background:${sc.dot}"></div><span style="color:${sc.text}">${STAGES[c.stage]||c.stage}</span></div>
+      </div>`;
+    }).join('');
+    return`<div class="month-group"><div class="month-header">${label}</div>${items}</div>`;
+  }).join('');
+}
+
+function setFilter(el){
+  document.querySelectorAll('.sf').forEach(f=>f.classList.remove('on'));el.classList.add('on');
+  filterMode=el.dataset.f;stageFilter='all';
+  document.querySelectorAll('.stage-filter').forEach(f=>f.classList.remove('on'));
+  document.querySelector('.stage-filter[data-sf="all"]').classList.add('on');
+  renderList();
+}
+function setStageFilter(el){
+  document.querySelectorAll('.stage-filter').forEach(f=>f.classList.remove('on'));el.classList.add('on');
+  stageFilter=el.dataset.sf;filterMode='all';
+  document.querySelectorAll('.sf').forEach(f=>f.classList.remove('on'));
+  document.querySelector('.sf[data-f="all"]').classList.add('on');
+  renderList();
+}
+
+// ─── SELECT CLIENT ─────────────────────────────────────────
+function selectClient(id){
+  activeId=id;activeTab='info';
+  const c=clients.find(x=>x.id===id);
+  if(c&&c.isNew){c.isNew=false;saveAndSync(c);}
+  renderList();renderMain();
+}
+
+// ─── RENDER MAIN ───────────────────────────────────────────
+function renderMain(){
+  const c=clients.find(x=>x.id===activeId);
+  if(!c)return;
+  const area=document.getElementById('mainArea');
+  const sc=SC[c.stage]||SC.negotiations;
+
+  const stageDDHtml=`<div class="stage-sel-wrap" id="sswrap">
+    <div class="stage-sel-btn" onclick="toggleDD()">
+      <div style="width:8px;height:8px;border-radius:50%;background:${sc.dot}"></div>
+      ${STAGES[c.stage]||c.stage}
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="stage-dropdown" id="stagedd">
+      ${Object.entries(STAGES).map(([k,v])=>`
+        <div class="sd-item${c.stage===k?' active':''}" onclick="changeStage(${c.id},'${k}')">
+          <div style="width:8px;height:8px;border-radius:50%;background:${SC[k].dot}"></div>${v}
+        </div>`).join('')}
+    </div>
+  </div>`;
+
+  const attnBtn=c.attention
+    ?`<button class="btn-attn btn-attn-on" onclick="toggleAttn(${c.id})">🔴 Важное</button>`
+    :`<button class="btn-attn btn-attn-off" onclick="toggleAttn(${c.id})">● Важное</button>`;
+  const replyBtn=c.needReply
+    ?`<button class="btn-attn btn-reply-on" onclick="toggleReply(${c.id})">🟡 Ждёт ответа</button>`
+    :`<button class="btn-attn btn-reply-off" onclick="toggleReply(${c.id})">○ Ждёт ответа</button>`;
+
+  area.innerHTML=`
+    <div class="sync-bar">
+      <div class="sync-dot ok" id="globalSyncDot"></div>
+      <span id="globalSyncText">${scriptUrl?'Google Sheets подключён':'Локальные данные'}</span>
+      <button class="btn-reload" onclick="loadFromSheets()">↻</button>
+      <button class="btn-setup" onclick="openSetup()" style="margin-left:auto">⚙</button>
+    </div>
+    <div class="m-top">
+      <div>
+        <div class="m-name">${c.name} <span style="color:var(--text2);font-weight:400">· ${c.company}</span></div>
+        <div class="m-sub">${c.contact}</div>
+      </div>
+      <div class="m-actions">
+        ${attnBtn}${replyBtn}${stageDDHtml}
+        <button class="btn-del" onclick="askDelete(${c.id})" title="Удалить">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab${activeTab==='info'?' on':''}" onclick="switchTab('info')">Инфо</div>
+      <div class="tab${activeTab==='conf'?' on':''}" onclick="switchTab('conf')">Конференция</div>
+      <div class="tab${activeTab==='chat'?' on':''}" onclick="switchTab('chat')">Переписка</div>
+      <div class="tab${activeTab==='files'?' on':''}" onclick="switchTab('files')">Файлы${c.files.length?`<span class="tab-badge">${c.files.length}</span>`:''}</div>
+      <div class="tab${activeTab==='coder'?' on':''}" onclick="switchTab('coder')">Кодер${c.coder.length?`<span class="tab-badge">${c.coder.length}</span>`:''}</div>
+      <div class="tab${activeTab==='history'?' on':''}" onclick="switchTab('history')">История</div>
+    </div>
+    <div class="content" id="tabContent"></div>
+    ${activeTab==='chat'?`<div class="chat-input-area">
+      <textarea class="chat-input" id="chatInput" placeholder="Написать сообщение..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg(${c.id})}"></textarea>
+      <button class="btn-send" onclick="sendMsg(${c.id})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button></div>`:''}
+  `;
+  renderTab(c);
+}
+
+// ─── RENDER TABS ───────────────────────────────────────────
+function renderTab(c){
+  const el=document.getElementById('tabContent');
+  if(!el)return;
+
+  if(activeTab==='info'){
+    const sc2=SC[c.stage]||SC.negotiations;
+    // Feed items: combine feed array
+    const feed=c.feed||[];
+    const feedHtml=feed.length
+      ?[...feed].reverse().map((f,ri)=>{
+        const i=feed.length-1-ri;
+        const typeClass=f.type==='system'?'system':'user-note';
+        const authorClass=f.author==='coder'?'coder':f.type==='system'?'system':'me';
+        const authorLabel=f.author==='coder'?'Кодер':f.type==='system'?'Система':'Я';
+        return`<div class="feed-item ${typeClass}">
+          <button class="feed-del" onclick="deleteFeedItem(${c.id},${i})">✕</button>
+          <div class="feed-meta">
+            <span class="feed-author ${authorClass}">${authorLabel}</span>
+            <span class="feed-time">${f.time||''}</span>
+          </div>
+          <div class="feed-text">${f.text}</div>
+        </div>`;
+      }).join('')
+      :`<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px 0">Заметок пока нет — напиши первую</div>`;
+
+    el.innerHTML=`
+      <div class="sec">
+        <div class="sec-title">Что предложил</div>
+        <div class="offer-box">${c.offer||'<span style="color:var(--text3)">Не заполнено</span>'}</div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Сводка</div>
+        <div class="info-grid">
+          <div class="info-box plain">
+            <div class="ib-label">Этап</div>
+            <div class="ib-val" style="display:flex;align-items:center;gap:5px;font-size:12px">
+              <div style="width:8px;height:8px;border-radius:50%;background:${sc2.dot}"></div>
+              <span style="color:${sc2.text}">${STAGES[c.stage]||c.stage}</span>
+            </div>
+          </div>
+          <div class="info-box plain"><div class="ib-label">Добавлен</div><div class="ib-val" style="font-size:12px">${c.timeline&&c.timeline[0]?c.timeline[0].date:'—'}</div></div>
+          <div class="info-box" onclick="switchTab('files')">
+            <div class="ib-label">Файлов</div>
+            <div class="ib-val">${c.files.length}</div>
+            <div class="ib-hint">→ перейти к файлам</div>
+          </div>
+          <div class="info-box" onclick="switchTab('chat')">
+            <div class="ib-label">Сообщений</div>
+            <div class="ib-val">${c.msgs.length}</div>
+            <div class="ib-hint">→ открыть переписку</div>
+          </div>
+          <div class="info-box" onclick="switchTab('history')">
+            <div class="ib-label">Событий</div>
+            <div class="ib-val">${c.timeline.length}</div>
+            <div class="ib-hint">→ смотреть историю</div>
+          </div>
+          <div class="info-box" onclick="switchTab('coder')">
+            <div class="ib-label">Записей кодера</div>
+            <div class="ib-val">${c.coder.length}</div>
+            <div class="ib-hint">→ открыть раздел</div>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Заметки и изменения</div>
+        <div class="feed-input-wrap">
+          <textarea class="feed-input" id="feedInput" placeholder="Написал КП, провёл встречу, отправил документы..." rows="1"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addFeedItem(${c.id})}"></textarea>
+          <button class="btn-feed-send" onclick="addFeedItem(${c.id})">Добавить</button>
+        </div>
+        <div class="feed">${feedHtml}</div>
+      </div>
+    `;
+  } else if(activeTab==='conf'){
+    el.innerHTML=`
+      <div class="sec"><div class="sec-title">Вопросы конференции</div>
+        ${c.qa.map((qa,i)=>`<div class="qa-item">
+          <div class="qa-q">${qa.q}<button class="btn-sm-red" onclick="deleteQA(${c.id},${i})">✕</button></div>
+          <textarea class="qa-a-input" placeholder="Ответ клиента..." onblur="saveQA(${c.id},${i},this.value)">${qa.a||''}</textarea>
+        </div>`).join('')}
+      </div>
+      <div class="sec"><div class="sec-title">Добавить вопрос</div>
+        <div class="add-row">
+          <input class="add-input" id="newQInput" placeholder="Текст вопроса...">
+          <button class="btn-add" onclick="addQuestion(${c.id})">+ Добавить</button>
+        </div></div>`;
+  } else if(activeTab==='chat'){
+    el.innerHTML=`<div class="msgs">${c.msgs.map(m=>`
+      <div class="msg-wrap ${m.from}">
+        <div class="msg-bubble">${m.text}</div>
+        <div class="msg-time">${m.from==='me'?'Вы':'Клиент'} · ${m.date}</div>
+      </div>`).join('')}</div>`;
+    setTimeout(()=>{el.scrollTop=el.scrollHeight;},30);
+  } else if(activeTab==='files'){
+    el.innerHTML=`
+      <div class="sec"><div class="sec-title">Файлы и документы</div>
+        ${c.files.length?c.files.map((f,i)=>`
+          <div class="file-item">
+            <div class="file-icon">${f.type}</div>
+            <div style="flex:1;min-width:0"><div class="file-name">${f.name}</div><div class="file-meta">${f.date}</div></div>
+            ${f.url?`<a class="file-link" href="${f.url}" target="_blank">Открыть ↗</a>`:''}
+            <button class="btn-sm-red" onclick="deleteFile(${c.id},${i})" style="margin-left:6px">✕</button>
+          </div>`).join('')
+          :`<div style="color:var(--text3);font-size:12px;margin-bottom:12px">Файлов пока нет</div>`}
+      </div>
+      <div class="sec"><div class="sec-title">Добавить файл</div>
+        <div class="add-row">
+          <input class="add-input" id="fFileName" placeholder="Название (напр. КП_v2.pdf)">
+          <input class="add-input" id="fFileUrl" placeholder="Ссылка на Google Drive (необязательно)">
+          <button class="btn-add" onclick="addFile(${c.id})">+</button>
+        </div></div>`;
+  } else if(activeTab==='coder'){
+    el.innerHTML=`
+      <div class="sec"><div class="sec-title">Переписка с кодером</div>
+        ${c.coder.length?c.coder.map((n,i)=>
+          n.role==='coder'
+            ?`<div class="coder-note"><div class="coder-who">Кодер<button class="btn-sm-red" onclick="deleteCoder(${c.id},${i})">✕</button></div>
+               <div class="coder-text">${n.text}</div><div class="coder-date">${n.date}</div></div>`
+            :`<div class="my-task"><div class="my-task-who">Ты → Кодеру<button class="btn-sm-red" onclick="deleteCoder(${c.id},${i})">✕</button></div>
+               <div class="coder-text">${n.text}</div><div class="coder-date">${n.date}</div></div>`
+        ).join(''):`<div style="color:var(--text3);font-size:12px;margin-bottom:12px">Записей пока нет</div>`}
+      </div>
+      <div class="sec"><div class="sec-title">Добавить запись</div>
+        <div class="add-row" style="flex-direction:column">
+          <textarea class="add-input" id="coderInput" placeholder="Задача, оценка, стек, вопросы..." style="min-height:64px"></textarea>
+          <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px">
+            <button class="btn-add" onclick="addCoderNote(${c.id},'me')">От меня</button>
+            <button class="btn-purple" onclick="addCoderNote(${c.id},'coder')">От кодера</button>
+          </div></div></div>`;
+  } else if(activeTab==='history'){
+    el.innerHTML=`<div class="sec"><div class="sec-title">Хронология</div>
+      ${[...c.timeline].reverse().map(t=>`
+        <div class="tl-row"><div class="tl-dot"></div>
+          <div><div class="tl-event">${t.event}</div>
+          ${t.desc?`<div class="tl-desc">${t.desc}</div>`:''}
+          <div class="tl-date">${t.date}</div></div></div>`).join('')}
+    </div>`;
+  }
+}
+function switchTab(tab){activeTab=tab;renderMain();}
+
+// ─── STAGE DROPDOWN ────────────────────────────────────────
+function toggleDD(){document.getElementById('stagedd')?.classList.toggle('open');}
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('sswrap');
+  if(wrap&&!wrap.contains(e.target))document.getElementById('stagedd')?.classList.remove('open');
+});
+
+// ─── FEED ──────────────────────────────────────────────────
+function addFeedItem(id){
+  const inp=document.getElementById('feedInput');
+  if(!inp||!inp.value.trim())return;
+  const c=clients.find(x=>x.id===id);
+  if(!c.feed)c.feed=[];
+  const ts=nowTs();
+  c.feed.push({text:inp.value.trim(),time:ts.display,type:'note',author:'me'});
+  addHistory(c,'Заметка добавлена',inp.value.trim().substring(0,50));
+  inp.value='';
+  saveAndSync(c);renderTab(c);
+}
+function deleteFeedItem(id,idx){
+  const c=clients.find(x=>x.id===id);
+  if(!c.feed)return;
+  c.feed.splice(idx,1);
+  saveAndSync(c);renderTab(c);
+}
+
+// ─── ACTIONS ───────────────────────────────────────────────
+function changeStage(id,stage){
+  const c=clients.find(x=>x.id===id);
+  const ts=nowTs();
+  if(!c.feed)c.feed=[];
+  c.feed.push({text:`Этап изменён → ${STAGES[stage]}`,time:ts.display,type:'system',author:'system'});
+  c.stage=stage;
+  addHistory(c,'Этап: '+STAGES[stage],'');
+  saveAndSync(c);renderMain();renderList();
+}
+function toggleAttn(id){
+  const c=clients.find(x=>x.id===id);
+  c.attention=!c.attention;
+  const ts=nowTs();
+  if(!c.feed)c.feed=[];
+  if(c.attention){
+    c.feed.push({text:'Помечен как требует внимания',time:ts.display,type:'system',author:'system'});
+    addHistory(c,'Помечен как важный','');
+  }
+  saveAndSync(c);renderMain();renderList();
+}
+function toggleReply(id){
+  const c=clients.find(x=>x.id===id);
+  c.needReply=!c.needReply;
+  const ts=nowTs();
+  if(!c.feed)c.feed=[];
+  if(c.needReply){
+    c.feed.push({text:'Помечен: ждёт ответа',time:ts.display,type:'system',author:'system'});
+    addHistory(c,'Помечен: ждёт ответа','');
+  }
+  saveAndSync(c);renderMain();renderList();
+}
+function saveQA(id,idx,val){const c=clients.find(x=>x.id===id);c.qa[idx].a=val;saveAndSync(c);}
+function addQuestion(id){
+  const inp=document.getElementById('newQInput');
+  if(!inp.value.trim())return;
+  const c=clients.find(x=>x.id===id);
+  c.qa.push({q:inp.value.trim(),a:''});
+  addHistory(c,'Добавлен вопрос',inp.value.trim());
+  saveAndSync(c);renderTab(c);
+}
+function deleteQA(id,idx){const c=clients.find(x=>x.id===id);c.qa.splice(idx,1);saveAndSync(c);renderTab(c);}
+function addFile(id){
+  const name=document.getElementById('fFileName').value.trim();
+  if(!name)return;
+  const url=document.getElementById('fFileUrl').value.trim();
+  const c=clients.find(x=>x.id===id);
+  const ts=nowTs();
+  c.files.push({name,date:today(),type:name.split('.').pop().toUpperCase(),url});
+  if(!c.feed)c.feed=[];
+  c.feed.push({text:`Добавлен файл: ${name}`,time:ts.display,type:'system',author:'system'});
+  addHistory(c,'Файл: '+name,'');
+  saveAndSync(c);renderTab(c);
+}
+function deleteFile(id,idx){const c=clients.find(x=>x.id===id);c.files.splice(idx,1);saveAndSync(c);renderTab(c);}
+function sendMsg(id){
+  const inp=document.getElementById('chatInput');
+  if(!inp?.value.trim())return;
+  const c=clients.find(x=>x.id===id);
+  const ts=nowTs();
+  c.msgs.push({from:'me',text:inp.value.trim(),date:ts.display});
+  if(!c.feed)c.feed=[];
+  c.feed.push({text:`Отправлено сообщение клиенту: "${inp.value.trim().substring(0,60)}${inp.value.length>60?'...':''}"`,time:ts.display,type:'system',author:'system'});
+  inp.value='';
+  saveAndSync(c);renderTab(c);
+}
+function addCoderNote(id,role){
+  const inp=document.getElementById('coderInput');
+  if(!inp.value.trim())return;
+  const c=clients.find(x=>x.id===id);
+  const ts=nowTs();
+  c.coder.push({role,text:inp.value.trim(),date:today()});
+  if(!c.feed)c.feed=[];
+  c.feed.push({text:(role==='coder'?'Кодер: ':'Задача кодеру: ')+inp.value.trim().substring(0,80),time:ts.display,type:role==='coder'?'system':'note',author:role});
+  addHistory(c,role==='coder'?'Кодер добавил запись':'Задача для кодера',inp.value.substring(0,50));
+  saveAndSync(c);renderMain();renderList();
+}
+function deleteCoder(id,idx){const c=clients.find(x=>x.id===id);c.coder.splice(idx,1);saveAndSync(c);renderTab(c);}
+
+// ─── DELETE CLIENT ─────────────────────────────────────────
+function askDelete(id){
+  const c=clients.find(x=>x.id===id);deleteTarget=id;
+  document.getElementById('confirmText').textContent=`Удалить "${c.name} · ${c.company}"? Нельзя отменить.`;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('open');deleteTarget=null;}
+function confirmDelete(){
+  if(!deleteTarget)return;
+  clients=clients.filter(x=>x.id!==deleteTarget);
+  deleteAndSync(deleteTarget);
+  if(activeId===deleteTarget){
+    activeId=null;
+    document.getElementById('mainArea').innerHTML=`
+      <div class="sync-bar"><div class="sync-dot ok" id="globalSyncDot"></div>
+        <span id="globalSyncText">${scriptUrl?'Google Sheets подключён':'Локальные данные'}</span>
+        <button class="btn-reload" onclick="loadFromSheets()">↻</button>
+        <button class="btn-setup" onclick="openSetup()" style="margin-left:auto">⚙</button></div>
+      <div class="m-empty">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".3"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <span style="font-size:13px">Выберите клиента</span></div>`;
+  }
+  closeConfirm();renderList();
+}
+
+// ─── MODALS ────────────────────────────────────────────────
+function openModal(){document.getElementById('overlay').classList.add('open');}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function saveClient(){
+  const name=document.getElementById('fName').value.trim();
+  const company=document.getElementById('fCompany').value.trim();
+  if(!name||!company){alert('Заполни имя и компанию');return;}
+  const ts=nowTs();
+  const c={
+    id:nextId++,name,company,
+    contact:document.getElementById('fContact').value.trim(),
+    stage:document.getElementById('fStage').value,
+    isNew:true,attention:false,needReply:false,notes:'',
+    offer:document.getElementById('fOffer').value.trim(),
+    qa:QA_DEFAULT.map(q=>({q,a:''})),
+    files:[],msgs:[],coder:[],
+    feed:[{text:'Клиент создан',time:ts.display,type:'system',author:'system'}],
+    timeline:[{date:today(),event:'Клиент создан',desc:''}]
+  };
+  clients.unshift(c);
+  saveAndSync(c);
+  closeModal();
+  ['fName','fCompany','fContact','fOffer'].forEach(id=>{document.getElementById(id).value='';});
+  renderList();selectClient(c.id);
+}
+function openSetup(){document.getElementById('setupOverlay').classList.add('open');document.getElementById('scriptUrlInput').value=scriptUrl;}
+function closeSetup(){document.getElementById('setupOverlay').classList.remove('open');}
+function saveSetup(){scriptUrl=document.getElementById('scriptUrlInput').value.trim();localStorage.setItem('crm_script_url',scriptUrl);closeSetup();loadFromSheets();}
+
+// ─── DEMO DATA ─────────────────────────────────────────────
+function getDemoClients(){
+  return[
+    {id:1,name:'Михаил Соколов',company:'ТехноСтрой',contact:'+7 999 123-45-67',stage:'kp',isNew:false,attention:true,needReply:false,notes:'',
+     offer:'Автоматизация складского учёта — мобильное приложение + веб-панель.',
+     qa:[{q:'Какую задачу хотят решить?',a:'Учёт склада в реальном времени'},{q:'Текущее решение?',a:'Excel не справляется'},{q:'Бюджет и сроки',a:'~500 тыс., Q3 2025'},{q:'Кто принимает решение?',a:'Михаил + финдир'},{q:'Доп. пожелания?',a:'Интеграция с 1С'}],
+     files:[{name:'КП_v1.pdf',date:'05.06.2025',type:'PDF',url:''},{name:'ТЗ_черновик.docx',date:'07.06.2025',type:'DOCX',url:''}],
+     msgs:[{from:'me',text:'Добрый день! Высылаю КП по автоматизации склада.',date:'02.06 10:14'},{from:'them',text:'Спасибо, изучим.',date:'02.06 15:30'}],
+     coder:[{role:'coder',text:'Интеграция с 1С через REST API. Оценка: 6–8 недель, стек React Native + Node.js. ~420–480 тыс.',date:'07.06.2025'}],
+     feed:[
+       {text:'Клиент создан',time:'02.06 09:00',type:'system',author:'system'},
+       {text:'Отправил первоначальное КП на email',time:'02.06 10:14',type:'note',author:'me'},
+       {text:'Этап изменён → Выслал КП',time:'05.06 11:00',type:'system',author:'system'},
+       {text:'Кодер: Интеграция с 1С через REST API. Оценка: 6–8 недель.',time:'07.06 14:30',type:'system',author:'coder'},
+       {text:'Помечен как требует внимания',time:'08.06 09:00',type:'system',author:'system'},
+     ],
+     timeline:[{date:'02.06.2025',event:'Клиент создан',desc:''},{date:'05.06.2025',event:'КП отправлено',desc:''},{date:'07.06.2025',event:'Кодер добавил оценку',desc:''}]},
+    {id:2,name:'Анна Петрова',company:'МедЛаб',contact:'a.petrova@medlab.ru',stage:'negotiations',isNew:true,attention:false,needReply:false,notes:'',
+     offer:'CRM для клиники — учёт пациентов, запись онлайн.',
+     qa:[{q:'Какую задачу хотят решить?',a:''},{q:'Текущее решение?',a:''},{q:'Бюджет и сроки',a:''},{q:'Кто принимает решение?',a:''},{q:'Доп. пожелания?',a:''}],
+     files:[],msgs:[{from:'me',text:'Анна, добрый день!',date:'09.06 09:00'}],coder:[],
+     feed:[{text:'Клиент создан',time:'09.06 09:00',type:'system',author:'system'}],
+     timeline:[{date:'09.06.2025',event:'Клиент создан',desc:''}]},
+    {id:3,name:'Дмитрий Ким',company:'АгроПлюс',contact:'+7 911 555-00-11',stage:'work',isNew:false,attention:false,needReply:false,notes:'',
+     offer:'Мобильное приложение для агрономов — GPS, журнал обработок.',
+     qa:[{q:'Какую задачу хотят решить?',a:'Бумажные журналы в поле'},{q:'Текущее решение?',a:'Нет аналитики'},{q:'Бюджет и сроки',a:'~1.2 млн, Q4'},{q:'Кто принимает решение?',a:'Совет директоров'},{q:'Доп. пожелания?',a:'Оффлайн-режим'}],
+     files:[{name:'ТЗ_v3.docx',date:'01.06.2025',type:'DOCX',url:''},{name:'КП_финал.pdf',date:'03.06.2025',type:'PDF',url:''}],
+     msgs:[{from:'them',text:'Совет одобрил! Готовы подписывать.',date:'07.06 11:30'}],
+     coder:[{role:'coder',text:'Flutter + Python FastAPI. Оффлайн через SQLite. 10–12 недель.',date:'28.05.2025'}],
+     feed:[
+       {text:'Клиент создан',time:'01.05 10:00',type:'system',author:'system'},
+       {text:'Провёл первую конференцию, 45 мин Zoom. Обсудили задачи.',time:'01.05 12:00',type:'note',author:'me'},
+       {text:'Этап изменён → В работе',time:'07.06 11:35',type:'system',author:'system'},
+     ],
+     timeline:[{date:'01.05.2025',event:'Клиент создан',desc:''},{date:'07.06.2025',event:'Договор одобрен',desc:''}]}
+  ];
+}
+
+// ─── INIT ──────────────────────────────────────────────────
+nextId=parseInt(localStorage.getItem('crm_nextid4')||'4');
+loadFromSheets();
+</script>
+</body>
+</html>
